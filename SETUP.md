@@ -1,8 +1,8 @@
 # One-time setup (each team member, about 1 minute)
 
-The plugin is public and installs with no GitHub account and no collaborator invite. It
-needs two values that are deliberately NOT in this public repo: a test token and the
-findings-sheet webhook. Your team lead will send you these two lines.
+After you clone the skill (see README), it needs two values that are deliberately NOT in this
+public repo: a test token and the findings-sheet webhook. Your team lead will send you these
+two lines.
 
 ## Set them once
 Paste the block your team lead gives you into your terminal (it looks like this, with the

@@ -1,87 +1,56 @@
-# Viji QA plugin
+# Viji QA skill
 
-An autonomous QA agent for the Viji WhatsApp booking assistant, packaged as a Claude Code
-plugin. It simulates real customer conversations against the live assistant, judges the
-replies against the product's expected behaviour, skips anything already logged, and reports
-a Word document plus rows in the team's shared Google Sheet.
+A Claude Code **skill** that QA-tests the Viji WhatsApp booking assistant as a real customer. It
+holds real conversations with the live bot, judges the experience, skips bugs already logged, writes
+a Word report, and appends new findings to the team's shared Google Sheet.
 
-Runs in **Claude Code** (desktop app, CLI, or IDE extension). It does not run in the regular
-Claude web chat.
+Works anywhere Claude Code runs (desktop app, CLI, IDE). No plugin marketplace, no `/plugin`.
 
 ## Install (each team member, once)
-This repo is public, so there is no GitHub account or collaborator invite needed. Pick whichever
-fits your Claude Code:
-
-**A. Desktop app (no terminal):** click **+** next to the prompt box, choose **Plugins → Add
-plugin**, paste `umidjon-ziyatdinov/viji-qa-plugin`, and enable **viji-qa**.
-
-**B. Settings file (hands-off, works everywhere including web/cloud):** add this to
-`~/.claude/settings.json` (create it if missing). It auto-installs and auto-updates on launch:
-```json
-{
-  "extraKnownMarketplaces": {
-    "viji-qa": { "source": { "source": "github", "repo": "umidjon-ziyatdinov/viji-qa-plugin" } }
-  },
-  "enabledPlugins": { "viji-qa@viji-qa": true }
-}
+Clone this repo into your Claude Code skills folder:
 ```
-
-**C. CLI terminal:** run `claude`, then `/plugin marketplace add umidjon-ziyatdinov/viji-qa-plugin`
-and `/plugin install viji-qa@viji-qa`.
-
-(The `/plugin` command only works in the CLI and the desktop app. If you see "/plugin isn't
-available in this environment", use method A or B.)
-
-Then do the **one-time setup** in [`SETUP.md`](SETUP.md): paste the two lines your team lead sends
-(a test token and the sheet webhook) into a local file. Nothing secret lives in this repo.
-
-## Update (each team member)
+git clone https://github.com/umidjon-ziyatdinov/viji-qa.git ~/.claude/skills/viji-qa
 ```
-/plugin update viji-qa
+Then do the one-time secrets setup in [`SETUP.md`](SETUP.md): paste the two lines your team lead
+sends (a test token and the sheet webhook) into a local file. Nothing secret lives in this repo.
+
+Restart Claude Code so it picks up the new skill.
+
+## Update
 ```
-Or enable auto-update: run `/plugin`, open **Marketplaces**, select this one, toggle
-auto-update on. Then updates arrive automatically when the maintainer pushes.
+cd ~/.claude/skills/viji-qa && git pull
+```
 
 ## Use
-Make requests however you like:
+Just ask, or type `/viji-qa`, followed by what you want to test:
 ```
-/viji-qa                                  # 3 varied scenarios, agent's choice
-/viji-qa 5                                # 5 varied scenarios
-/viji-qa book a padel court and pay by card    # test a specific request as a customer
-/viji-qa try the new grocery delivery flow     # probe a NEW feature
-/viji-qa stress-test Arabic voice-note phrasing
+/viji-qa                                        # 3 varied scenarios
+/viji-qa book a padel court and pay by card     # test a specific request
+/viji-qa try the new grocery delivery flow      # probe a NEW feature
+/viji-qa customer writes in Arabic then English # test a behaviour
+/viji-qa 5                                       # 5 varied scenarios
 ```
-You can also drop a `./qa-scenarios.md` file in your working folder listing your own use-cases,
-and the agent will run those too.
+You can also drop a `./qa-scenarios.md` file in your working folder listing your own use-cases; the
+skill runs those too.
 
 Each run:
-1. Reads the existing findings from the shared sheet (so it does not re-report known bugs).
-2. Holds real conversations for whatever you asked (yours, or auto), exploring freely.
-3. Judges the conversation with its own judgment (guided by `plugin/rules/viji-rules.md`, not a
-   rigid checklist), and validates new features too.
+1. Reads existing findings from the shared sheet (so it does not re-report known bugs).
+2. Holds real conversations for whatever you asked, exploring edge cases, from the customer's side.
+3. Judges with its own judgment (guided by `rules/viji-rules.md`, not a rigid checklist), including new features.
 4. Writes `./viji-qa-findings/<date>.md` and `<date>.docx` (needs `pandoc`).
 5. Appends only the NEW findings to the shared Google Sheet, which the team collaborates on.
 
 ## Collaboration
-The shared Google Sheet is the single source of truth. The agent appends new findings; the
-team reviews them, sets **Status / Owner / Notes**, and adds their own manually-found bugs as
-rows. Everyone's runs feed the same sheet.
+The shared Google Sheet is the single source of truth. The skill appends new findings; the team
+reviews them, sets **Status / Owner / Notes**, and adds their own manually-found bugs as rows.
 
-## Add your own test cases and tune behaviour
-- Add use cases: create `./qa-scenarios.md` in your working folder and describe scenarios; the
-  agent will run them alongside the ones it generates.
-- Tune what counts as a bug: the judging reference is `plugin/rules/viji-rules.md`. To change it
-  for everyone, edit that file and push (it updates with the plugin). To change it just for
-  yourself, keep a `./qa-rules.md` in your working folder and mention it when you run.
-
-## Setup (maintainer, once)
-1. Create the shared sheet and deploy the Apps Script: [`setup/WEBHOOK-SETUP.md`](setup/WEBHOOK-SETUP.md).
-2. Send the team the two-line secrets block (token + `/exec` webhook) from [`SETUP.md`](SETUP.md).
-   These are NOT committed to this public repo.
+## Maintainer setup (once)
+Create the shared sheet and deploy the Apps Script webhook: [`setup/WEBHOOK-SETUP.md`](setup/WEBHOOK-SETUP.md),
+then send the team the two-line secrets block from [`SETUP.md`](SETUP.md).
 
 ## Safety
-- The test token authenticates only the agent-chat endpoint and only reaches reserved
-  `+1000000` test numbers. It can never message a real customer or read customer data. Revocable.
-- No secrets are stored in this repository. The token and webhook live only in each user's local
+- The token authenticates only the agent-chat endpoint and only reaches reserved `+1000000` test
+  numbers. It can never message a real customer or read customer data. Revocable.
+- No secrets are stored in this repo. Token and webhook live only in each user's local
   `~/.config/viji-qa/secrets.sh`.
 - `pandoc` is required for the Word report: https://pandoc.org/installing.html

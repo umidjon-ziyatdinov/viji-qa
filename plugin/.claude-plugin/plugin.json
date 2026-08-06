@@ -1,9 +1,0 @@
-{
-  "name": "viji-qa",
-  "version": "0.1.0",
-  "description": "Autonomous QA for the Viji WhatsApp booking assistant. Simulates real customer conversations, judges the replies against the product's expected behaviour, deduplicates against the shared findings sheet, and reports a Word document plus rows in the team's Google Sheet.",
-  "author": {
-    "name": "Viji / SkyBlue Group"
-  },
-  "commands": ["./commands/viji-qa.md"]
-}

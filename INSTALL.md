@@ -11,14 +11,25 @@ conversation, writes a Word report, and logs new bugs to the team's shared sheet
 - `git` and `pandoc` on your machine. If either is missing, the self-install prompt below tells you
   the one command to install it.
 
-## Option A — Self-install (easiest, no terminal knowledge needed)
-1. Open Claude Code.
-2. Paste the setup prompt your team lead sent you (it clones the skill and sets your two secret
-   values for you). If you do not have it, ask your lead for the "Viji QA install prompt".
-3. When it finishes, **fully quit and reopen Claude Code** so the skill loads.
-4. Type `/viji-qa book a padel court and pay by card` to test it.
+## Option A — One command (fastest)
+Paste the line your team lead sent you into a terminal. It installs the skill and sets your two
+secret values in one go:
+```
+curl -fsSL https://raw.githubusercontent.com/umidjon-ziyatdinov/viji-qa/main/install.sh \
+  | VIJI_AGENT_TOKEN="the-token" VIJI_SHEET_WEBHOOK="the-webhook-url" bash
+```
+Then **fully quit and reopen Claude Code** and run `/viji-qa book a padel court and pay by card`.
 
-## Option B — Manual (terminal)
+(Run it without the two `VIJI_...` variables to install the skill only; it then writes a blank
+secrets file for you to fill in.)
+
+## Option B — Self-install from inside Claude Code (no terminal)
+1. Open Claude Code.
+2. Paste the "Viji QA install prompt" your team lead sent you (it clones the skill and sets your
+   secret values for you).
+3. **Fully quit and reopen Claude Code**, then type `/viji-qa book a padel court and pay by card`.
+
+## Option C — Manual, step by step (terminal)
 1. Install the skill:
    ```
    git clone https://github.com/umidjon-ziyatdinov/viji-qa.git ~/.claude/skills/viji-qa

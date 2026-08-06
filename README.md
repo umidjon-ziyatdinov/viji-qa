@@ -9,11 +9,29 @@ Runs in **Claude Code** (desktop app, CLI, or IDE extension). It does not run in
 Claude web chat.
 
 ## Install (each team member, once)
-This repo is public, so there is no GitHub account or collaborator invite needed. In Claude Code:
+This repo is public, so there is no GitHub account or collaborator invite needed. Pick whichever
+fits your Claude Code:
+
+**A. Desktop app (no terminal):** click **+** next to the prompt box, choose **Plugins → Add
+plugin**, paste `umidjon-ziyatdinov/viji-qa-plugin`, and enable **viji-qa**.
+
+**B. Settings file (hands-off, works everywhere including web/cloud):** add this to
+`~/.claude/settings.json` (create it if missing). It auto-installs and auto-updates on launch:
+```json
+{
+  "extraKnownMarketplaces": {
+    "viji-qa": { "source": { "source": "github", "repo": "umidjon-ziyatdinov/viji-qa-plugin" } }
+  },
+  "enabledPlugins": { "viji-qa@viji-qa": true }
+}
 ```
-/plugin marketplace add umidjon-ziyatdinov/viji-qa-plugin
-/plugin install viji-qa@viji-qa
-```
+
+**C. CLI terminal:** run `claude`, then `/plugin marketplace add umidjon-ziyatdinov/viji-qa-plugin`
+and `/plugin install viji-qa@viji-qa`.
+
+(The `/plugin` command only works in the CLI and the desktop app. If you see "/plugin isn't
+available in this environment", use method A or B.)
+
 Then do the **one-time setup** in [`SETUP.md`](SETUP.md): paste the two lines your team lead sends
 (a test token and the sheet webhook) into a local file. Nothing secret lives in this repo.
 

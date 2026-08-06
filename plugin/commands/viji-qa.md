@@ -1,4 +1,5 @@
 ---
+name: viji-qa
 description: QA the Viji chatbot — make requests (yours or auto), judge the conversation for bugs, explore new features, dedup, and report
 argument-hint: "[number of scenarios] OR [a specific request/use-case to test]"
 allowed-tools: Bash, Read, Grep, Glob, Write

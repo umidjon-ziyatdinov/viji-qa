@@ -2,8 +2,8 @@
 name: viji-qa
 description: >-
   QA the Viji WhatsApp booking assistant as a real customer. Use when someone wants to test the
-  Viji chatbot, try a request or a new feature, probe edge cases, or find and report bugs.
-  Triggers: "viji qa", "test the chatbot", "try booking ...", "/viji-qa".
+  Viji chatbot, try a request or a new feature, probe edge cases, re-run a past case, or find and
+  report bugs. Triggers: "viji qa", "test the chatbot", "try booking ...", "run case N again", "/viji-qa".
 ---
 
 # Viji QA — test as a real customer
@@ -21,34 +21,45 @@ that customer would feel it, not as a pass/fail script.
 
 Helper scripts and references live in this skill's folder (installed at `~/.claude/skills/viji-qa/`).
 
-## Step 1 — Plan the test cases (this is the core of good QA)
-First load what you need to plan well:
-- **Bug history** (for dedup, and to see what has been covered recently):
-  `bash ~/.claude/skills/viji-qa/scripts/sheet.sh history`
-- **Coverage map** (the real services, booking shapes, languages, and behaviours to draw from):
-  `Read ~/.claude/skills/viji-qa/rules/coverage.md`
+## Step 1 — Load history, then PLAN the cases (this is the core of good QA)
+Read the shared sheet and the coverage map first:
+- `bash ~/.claude/skills/viji-qa/scripts/sheet.sh history`
+  Returns `{"findings":[...], "testlog":[...], "next_case_no":N}`.
+  - **findings** = known bugs, for DEDUP (do not re-report these).
+  - **testlog** = every case already run (`case_no`, `title`, `service`, `language`, `behaviour`,
+    `outcome`, `conversation`), for UNIQUENESS and to see coverage gaps.
+  - **next_case_no** = the number the FIRST new case in this run must use; increment for each further new case.
+- `Read ~/.claude/skills/viji-qa/rules/coverage.md`
 
-Then decide the cases from what the user asked (`$ARGUMENTS`):
-- **A specific request** (e.g. `book a padel court and pay by card`, `try the new grocery flow`):
-  play exactly that as a real customer with natural follow-ups. You may add one related edge probe.
-- **A number** (e.g. `5`) or **nothing specific**: INVENT that many (default 3) but PLAN them to be
-  DIVERSE — do not test the same thing every run:
-  - **Spread across services** — pick different subcategories across different categories from the
-    coverage map. Favour services the history has NOT covered recently, and anything new or changed.
-  - **Mix languages** — English plus at least one non-English (Arabic, Hindi, Tamil, Tagalog, or a
-    romanized form). Include a mid-chat language switch sometimes, and a voice-note-style ramble sometimes.
-  - **Mix behaviours** — across the set, include a clean happy path, a multi-part request, a stated
-    constraint (budget/party size/time/"cheapest"), a change of mind or rebook, an edge/adversarial
-    case (fake venue, out-of-scope or health-advice ask, homophone/typo, prompt injection, absurd
-    request, one-word reply), and a NEW-feature probe.
-  - **Real personas** — vary name, language, mood (calm/impatient/frustrated), and verbosity.
-- If a file `./qa-scenarios.md` exists in the working folder, run the team's use-cases from it too.
-- To catch NEW features, you may first ask the bot once, e.g. "what can you help me with?" or "do
-  you do <something>?", and fold anything unfamiliar into your plan.
+Now build the plan. **Intent leads; exploration fills the gaps.**
 
-**Write your planned cases as a short numbered list before you run them**, so the coverage is
-intentional and shows up in the report's "What was tested". A candidate finding later is a DUPLICATE
-if it is the same underlying defect as one already in the history, even if worded differently.
+**A) If the user named cases or a topic** (e.g. `test viji: booking a haircut, and a refund question`):
+- Expand EACH named case into a few realistic variations on that SAME topic (vary persona, language,
+  a constraint, an edge twist). Stay on intent; do NOT wander into unrelated services.
+- If the request is ambiguous AND a human is present (interactive run): draft the case list, then
+  ask 1-3 sharp clarifying questions (which area? how many? which language? pay by card or cash?)
+  and run after they answer. If the launch prompt contains the word **`unattended`** (scheduled /
+  cloud run): do NOT ask; pick the most sensible reading, state your assumptions in the report, and run.
+
+**B) If the user gave a number or nothing specific** (default 3): INVENT that many, exploration-led:
+- **Spread across services** — different subcategories across different categories from the coverage map.
+  Favour services the **testlog has NOT covered**, and anything new or changed.
+- **Mix languages** — English plus at least one non-English; a mid-chat switch or a voice-note ramble sometimes.
+- **Mix behaviours** — a clean happy path, a multi-part request, a stated constraint, a change of
+  mind/rebook, an edge/adversarial case, and a NEW-feature probe.
+
+**C) If the user names a case number to repeat** (e.g. `run case 8 again`, `re-test case 12 and 15`):
+- Find that `case_no` in the testlog, and replay its SAME scenario (same service, language, twist).
+  This is the ONLY way a past case is repeated.
+
+**Uniqueness rule:** except for an explicit re-run (C), every case you plan must be UNIQUE against the
+testlog. Two cases are the same if they share service + language + behaviour + the concrete specifics.
+If your idea matches a logged case, change it or pick another gap. Do not repeat history by accident.
+
+**Numbering:** give each NEW case the next global number starting at `next_case_no`, and a short
+human title: `Case 12 — Padel court booking · EN · pay by card`. A re-run keeps its original number.
+
+**Write the planned, numbered case list before running**, so coverage is intentional and appears in the report.
 
 ## Step 2 — Judging guidance (guidance, not a strict spec)
 `Read ~/.claude/skills/viji-qa/rules/viji-rules.md`
@@ -65,7 +76,7 @@ character to each reply. It only reaches reserved `+1000000` TEST numbers, never
 Never hand-write curl.
 
 ## Step 4 — Judge, then dedup before recording
-Evaluate each conversation with judgment. For each candidate issue, compare to the Step 1 history:
+Evaluate each conversation with judgment. For each candidate issue, compare to the findings history:
 - **Already known**: do not add it to the sheet; list it under "Recurrences of known issues".
 - **New**: keep it as a NEW finding. Tag `(new feature)` if it is about newly added/changed behaviour.
 Never report HTTP/transport/status. You judge what the assistant SAYS.
@@ -73,9 +84,9 @@ Never report HTTP/transport/status. You judge what the assistant SAYS.
 ## Step 5 — Write the docs (professional, no em dashes)
 Compute `<TODAY>` with `date +%F`. Write `./viji-qa-findings/<TODAY>.md`:
 - `# Viji QA Report, <TODAY>` and a one-line summary (`what was tested, X new issues, Y recurrences`).
-- `## What was tested` — a table: `# | Case (persona, service, language, twist) | Turns | Outcome | How the assistant behaved`.
+- `## What was tested` — a table: `Case # | Title | Turns | Outcome | How the assistant behaved`.
 - `## New findings` — per NEW issue: severity, area, Expected vs Actual, a quoted assistant reply as
-  Evidence, the conversation_id, and (if relevant) which guidance it relates to. Tag new-feature items.
+  Evidence, the conversation_id, the Case # it came from, and (if relevant) which guidance it relates to.
 - `## Recurrences of known issues` — duplicates you skipped (title + conversation_id).
 - `## Worked well` — a short list of what behaved correctly (including new features that worked).
 - `## Appendix: conversation transcripts` — for every conversation with a NEW finding, its number
@@ -83,16 +94,23 @@ Compute `<TODAY>` with `date +%F`. Write `./viji-qa-findings/<TODAY>.md`:
   non-English messages.
 Then generate the Word version: `pandoc ./viji-qa-findings/<TODAY>.md -o ./viji-qa-findings/<TODAY>.docx`.
 
-## Step 6 — Append only the NEW findings to the shared sheet
+## Step 6 — Record to the shared sheet (two writes)
+1. **Log EVERY case run** to the Test log (clean ones too, so coverage and uniqueness stay honest):
+```
+# ./viji-qa-findings/<TODAY>.cases.json -> {"cases":[ {case_no,title,service,language,behaviour,outcome,conversation_id,tester,notes}, ... ]}
+bash ~/.claude/skills/viji-qa/scripts/sheet.sh logcases ./viji-qa-findings/<TODAY>.cases.json
+```
+`outcome` is one of `clean` / `finding` / `recurrence`. `tester` is your name or `QA agent`.
+For a re-run, reuse the original `case_no`.
+2. **Append only the NEW findings** to the Findings tab:
 ```
 # ./viji-qa-findings/<TODAY>.append.json -> {"rows":[ {found_at,severity,area,title,scenario,expected,actual,evidence,conversation_id,found_by,notes}, ... ]}
 bash ~/.claude/skills/viji-qa/scripts/sheet.sh append ./viji-qa-findings/<TODAY>.append.json
 ```
-Set `found_by` to your name or `QA agent`; put `(new feature)` in `notes` where it applies. The
-sheet is the single source of truth the team collaborates on.
+Put `(new feature)` in `notes` where it applies. The sheet is the single source of truth the team collaborates on.
 
 ## Step 7 — Console summary
-Print: what was tested (the planned cases), NEW issues, recurrences, and the paths to the `.md` and `.docx`.
+Print the numbered cases run (with titles), NEW issues, recurrences, and the paths to the `.md` and `.docx`.
 
 Be fair: report a finding when a real customer would genuinely be worse off; for borderline or
 matter-of-taste things, say so and rate them low rather than dropping or overstating them. Always

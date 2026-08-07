@@ -2,8 +2,13 @@
 
 Use this to plan DIVERSE, realistic cases that spread across the product, instead of testing the
 same thing every run. You do not have to cover everything in one run. Rotate: over time, hit
-different services, languages, and behaviours. Bias toward areas the sheet history has NOT covered
-recently, and toward anything that looks new or changed.
+different services, languages, and behaviours. Bias toward areas the **Test log** has NOT covered,
+and toward anything that looks new or changed.
+
+**Every new case must be UNIQUE against the Test log** (same service + language + behaviour +
+specifics = the same case). A past case is repeated only when the user names its number ("run case
+8 again"). When intent is given, expand each named case into variations on that same topic rather
+than wandering into unrelated services.
 
 ## 1. Services (pick different ones across runs)
 - **beauty:** barber, ladies-salon, nails, spa, medspa, home-beauty

@@ -8,6 +8,10 @@ Create a Google Sheet named **Viji QA Findings** (or reuse an existing one). Thi
 single source of truth the team collaborates on. Do NOT use the client's curated bug
 tracker for this; keep the agent's output separate.
 
+The script creates two tabs automatically on first use: **Findings** (bugs only, which the
+team triages) and **Test log** (one row per case run, so planning avoids repeats and everyone
+sees collective coverage). You do not need to create the tabs by hand.
+
 ## 2. Add the bound Apps Script
 1. In that sheet, open **Extensions > Apps Script**. (Opening it from the sheet is what makes
    the script *bound* to it. A standalone script will not work.)
@@ -40,9 +44,9 @@ add Notes, and log their own findings alongside the agent's.
 ## 6. Verify
 From this folder:
 ```
-bash plugin/scripts/sheet.sh history
+bash scripts/sheet.sh history
 ```
-You should get `{"findings":[]}` (empty at first). If you see a "not configured" message,
+You should get `{"findings":[],"testlog":[],"next_case_no":1}` (empty at first). If you see a "not configured" message,
 re-check step 4. If you get a Google login page, re-check "Who has access: Anyone" in step 3.
 
 ## Notes
